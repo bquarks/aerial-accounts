@@ -23,18 +23,22 @@ var corbelLogin = function (corbelDriver, username, password, callback) {
   })
   .then(function (response) {
     console.log('AAAAAAAAAA corbel response successfull');
-    callback(null, response);
+    callback(null, response.data);
+  })
+  .catch(function (err) {
+    callback(err);
   });
-
 };
 
 var corbelUser = function (corbelDriver, callback) {
-
-  return corbelDriver.iam.user('me').get()
-         .then(function (response) {
-           console.log('AAAAAAAAAA corbel response successfull');
-          callback(null, response.data);
-         });
+  corbelDriver.iam.user('me').get()
+  .then(function (response) {
+    console.log('AAAAAAAAAA corbel response successfull');
+    callback(null, response.data);
+  })
+  .catch(function (error) {
+   callback(error);
+  });
 };
 
 let getCorbelDriver = function (options) {
@@ -59,6 +63,7 @@ Accounts.registerLoginHandler('corbel', function (options) {
   let userProfile = corbelUser(corbelDriver);
 
   if (!userProfile) {
+    console.log('Not user profile');
     return;
   }
 
@@ -80,9 +85,9 @@ Accounts.registerLoginHandler('corbel', function (options) {
   return {
     userId: userId,
     stampedLoginToken: {
-      token: result.data.accessToken,
-      tokenExpires: result.data.expiresAt,
-      refreshToken: result.data.refreshToken
+      token: result.accessToken,
+      tokenExpires: result.expiresAt,
+      refreshToken: result.refreshToken
     }
   };
 
@@ -107,10 +112,6 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
 
 
   let result = corbelUser(corbelDriver);
-
-  if (!result) {
-    return;
-  }
 
   let loggedUser = Meteor.users.findOne({username: result.username});
 

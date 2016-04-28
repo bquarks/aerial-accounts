@@ -15,14 +15,20 @@ Accounts.loginWithTokenCorbel = function (callback) {
 };
 
 
-Meteor.loginWithCorbel = function (username, password) {
+Meteor.loginWithCorbel = function (username, password, callback) {
   Accounts.callLoginMethod({
     methodArguments: [{
       username: username,
       password: password
     }],
     userCallback: function (error, result) {
+      if (error) {
+        throw error;
+      }
 
+      if (typeof callback === 'function'){
+        callback(result);
+      }
     }
   });
 };

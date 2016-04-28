@@ -9,6 +9,7 @@ Meteor.startup(function () {
 
   if (!autologin && Accounts._autoLoginEnabled) {
     Accounts._disableAutoLogin();
+    Accounts._unstoreLoginToken();
   }
   else {
     Accounts._autoLoginEnabled = true;
