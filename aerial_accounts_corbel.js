@@ -22,7 +22,6 @@ var corbelLogin = function (corbelDriver, username, password, callback) {
     claims: claims
   })
   .then(function (response) {
-    console.log('AAAAAAAAAA corbel response successfull');
     callback(null, response.data);
   })
   .catch(function (err) {
@@ -33,7 +32,6 @@ var corbelLogin = function (corbelDriver, username, password, callback) {
 var corbelUser = function (corbelDriver, callback) {
   corbelDriver.iam.user('me').get()
   .then(function (response) {
-    console.log('AAAAAAAAAA corbel response successfull');
     callback(null, response.data);
   })
   .catch(function (error) {
@@ -50,7 +48,6 @@ let getCorbelDriver = function (options) {
 };
 
 Accounts.registerLoginHandler('corbel', function (options) {
-  console.log('Login with corbel');
 
   if (!options.username || !options.password) {
     return undefined; // don't handle
@@ -63,7 +60,6 @@ Accounts.registerLoginHandler('corbel', function (options) {
   let userProfile = corbelUser(corbelDriver);
 
   if (!userProfile) {
-    console.log('Not user profile');
     return;
   }
 
@@ -94,7 +90,6 @@ Accounts.registerLoginHandler('corbel', function (options) {
 });
 
 Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
-  console.log('Resume login with corbel');
 
   if (!options.token && !options.refreshToken && !options.expiresAt ) {
     return undefined; // don't handle

@@ -54,7 +54,6 @@ Accounts._loginCorbelUser = function (methodInvocation, userId, corbelToken) {
 // in the process of becoming associated with hashed tokens and then
 // they'll get closed.
 Accounts.destroyToken = function (userId, loginToken, connectionId) {
-  console.log('Destroying token of ' + userId + ' with connection ' + connectionId);
 
   var query = {
     $pull: {
@@ -68,7 +67,6 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
     query.$pull["services.corbel.loginTokens"].connection = connectionId;
   }
 
-  console.log('query: ', JSON.stringify(query));
 
   this.users.update(userId, query);
 
@@ -79,7 +77,6 @@ Accounts.destroyUser = function (userId, token) {
   var user = this.users.findOne({ _id: userId });
 
   if (user && user.services && user.services.corbel && user.services.corbel.loginTokens && user.services.corbel.loginTokens.length === 0) {
-    console.log('Removing user with userId: ', userId);
     this.users.remove({_id: userId});
   }
 };
@@ -92,7 +89,6 @@ Accounts.destroyUser = function (userId, token) {
 //
 // Overwritten to save the token and the refresh token in the minimongo user collection (AERIAL)
 Accounts._insertHashedLoginToken = function (userId, corbelToken, query, connection) {
-  console.log('Inserting token to the user ' + userId + 'with connection ' + connection.id + ' and with the query ' + query);
   query = query ? _.clone(query) : {};
   query._id = userId;
   this.users.update(query, {
@@ -213,7 +209,6 @@ Accounts._setLoginToken = function (userId, connection, newToken) {
     //   // callback would have called _removeTokenFromConnection and there won't
     //   // be an entry in _userObservesForConnections. We can stop the observe.
     //   if (self._userObservesForConnections[connection.id] !== myObserveNumber) {
-    //     console.log('stopping observers');
     //     observe.stop();
     //     return;
     //   }
@@ -221,7 +216,6 @@ Accounts._setLoginToken = function (userId, connection, newToken) {
     //   self._userObservesForConnections[connection.id] = observe;
     //
     //   if (! foundMatchingUser) {
-    //     console.log('user not found');
     //     // We've set up an observe on the user associated with `newToken`,
     //     // so if the new token is removed from the database, we'll close
     //     // the connection. But the token might have already been deleted

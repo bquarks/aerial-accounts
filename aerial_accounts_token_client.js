@@ -64,7 +64,6 @@ Accounts._pollStoredLoginTokenCorbel = function () {
         }
       });
     } else {
-      console.log('logging out');
       self.logout();
     }
   }

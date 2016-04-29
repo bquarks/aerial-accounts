@@ -111,7 +111,6 @@ Accounts.callLoginMethod = function (options) {
       // See issue #4970.
     } else {
       self.connection.onReconnect = function () {
-        console.log('Reconnecting with userId: ', Meteor.userId());
         reconnected = true;
         // If our token was updated in storage, use the latest one.
         var storedToken = self._storedLoginToken();
