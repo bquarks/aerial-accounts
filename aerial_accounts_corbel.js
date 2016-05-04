@@ -11,8 +11,25 @@ Accounts.replaceLoginHandler = function (oldHandlerName, newHandlerName, func) {
   }
 };
 
-var corbelLogin = function (corbelDriver, username, password, callback) {
-  var claims = {
+let throwCorbelError = function (error) {
+
+  let errorMessage = error.data ? error.data.errorDescription : 'No error description provided.';
+
+  switch (error.status) {
+    case 401:
+      throw new Meteor.Error(401, 'Corbel authentication error - ' + errorMessage);
+    case 403:
+      throw new Meteor.Error(403, 'Corbel authentication error - ' + errorMessage);
+    case 404:
+      throw new Meteor.Error(404, 'Corbel authentication error - ' + errorMessage);
+    default:
+      throw new Meteor.Error(error.status, 'Corbel authentication error - ' + errorMessage);
+  }
+
+};
+
+let corbelLogin = function (corbelDriver, username, password, callback) {
+  let claims = {
   'scope': 'booqs:web booqs:user',
   'basic_auth.username': username,
   'basic_auth.password': password
@@ -29,13 +46,56 @@ var corbelLogin = function (corbelDriver, username, password, callback) {
   });
 };
 
-var corbelUser = function (corbelDriver, callback) {
+var getCorbelAuth = function (corbelDriver) {
+
+  let userProfile;
+
+  try {
+    userProfile = corbelUser(corbelDriver);
+  }
+  catch(e) {
+    throwCorbelError(e);
+  }
+
+  if (!userProfile) {
+    return;
+  }
+
+  let loggedUser = Meteor.users.findOne({username: userProfile.username});
+
+  let userId = (!loggedUser || !loggedUser._id) ? Accounts.insertUserDoc({}, {username: userProfile.username}) : loggedUser._id;
+
+  Meteor.users.update({
+    _id: userId
+  },
+  { $set: userProfile },
+  {
+    field: {
+      services: 0
+    }
+  }
+  );
+
+  var tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {});
+
+  return {
+    userId: userId,
+    stampedLoginToken: {
+      token: tokenObject.accessToken,
+      tokenExpires: tokenObject.expiresAt,
+      refreshToken: tokenObject.refreshToken
+    }
+  };
+
+};
+
+let corbelUser = function (corbelDriver, callback) {
   corbelDriver.iam.user('me').get()
   .then(function (response) {
     callback(null, response.data);
   })
   .catch(function (error) {
-   callback(error);
+    callback(error);
   });
 };
 
@@ -55,37 +115,17 @@ Accounts.registerLoginHandler('corbel', function (options) {
 
   let corbelDriver = getCorbelDriver();
 
-  let result = corbelLogin(corbelDriver, options.username, options.password);
+  let userProfile;
 
-  let userProfile = corbelUser(corbelDriver);
-
-  if (!userProfile) {
-    return;
+  try {
+    corbelLogin(corbelDriver, options.username, options.password);
+    userProfile = getCorbelAuth(corbelDriver);
+  }
+  catch (error) {
+    throwCorbelError(error);
   }
 
-  let loggedUser = Meteor.users.findOne({username: userProfile.username});
-
-  let userId = (!loggedUser || !loggedUser._id) ? Accounts.insertUserDoc({}, {username: userProfile.username}) : loggedUser._id;
-
-  Meteor.users.update({
-    _id: userId
-  },
-  { $set: userProfile },
-  {
-    field: {
-      services: 0
-    }
-  }
-);
-
-  return {
-    userId: userId,
-    stampedLoginToken: {
-      token: result.accessToken,
-      tokenExpires: result.expiresAt,
-      refreshToken: result.refreshToken
-    }
-  };
+  return userProfile;
 
 });
 
@@ -105,34 +145,16 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
     }
   });
 
+  let userProfile;
 
-  let result = corbelUser(corbelDriver);
-
-  let loggedUser = Meteor.users.findOne({username: result.username});
-
-  let userId = (!loggedUser || !loggedUser._id) ? Accounts.insertUserDoc({}, {username: result.username}) : loggedUser._id;
-
-  Meteor.users.update({
-    _id: userId
-  },
-  { $set: result },
-  {
-    field: {
-      services: 0
-    }
+  try {
+    userProfile = getCorbelAuth(corbelDriver);
   }
-  );
+  catch (error) {
+    throwCorbelError(error);
+  }
 
-  var tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {});
-
-  return {
-    userId: userId,
-    stampedLoginToken: {
-      token: tokenObject.accessToken,
-      tokenExpires: tokenObject.expiresAt,
-      refreshToken: tokenObject.refreshToken
-    }
-  };
+  return userProfile;
 
 });
 
