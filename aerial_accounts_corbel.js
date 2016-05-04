@@ -1,5 +1,26 @@
 let corbel = require('corbel-js');
 
+UsersProfile = new Meteor.Collection('usersProfile');
+
+Accounts.getCorbelDriver = function (userId) {
+  let user = Meteor.users.findOne({
+              _id: userId
+            }),
+      corbelDriver;
+
+  if (user) {
+    let corbelDriver = corbel.getDriver(_.extend(CORBEL_ME_CONFIG, {
+      iamToken: {
+        accessToken: user.token,
+        refreshToken: user.refreshToken,
+        expiresAt: user.tokenExpires
+      }
+    }));
+  }
+
+  return corbelDriver;
+};
+
 Accounts.replaceLoginHandler = function (oldHandlerName, newHandlerName, func) {
   for (var i = 0; i < this._loginHandlers.length ; i++) {
     if (oldHandlerName === this._loginHandlers[i].name) {
@@ -29,16 +50,18 @@ let throwCorbelError = function (error) {
 };
 
 let corbelLogin = function (corbelDriver, username, password, callback) {
+
   let claims = {
-  'scope': 'booqs:web booqs:user',
-  'basic_auth.username': username,
-  'basic_auth.password': password
+    'scope': CORBEL_SCOPES_CONFIG,
+    'basic_auth.username': username,
+    'basic_auth.password': password
   };
 
   corbelDriver.iam.token().create({
     claims: claims
   })
   .then(function (response) {
+    // console.dir(response);
     callback(null, response.data);
   })
   .catch(function (err) {
@@ -61,25 +84,24 @@ var getCorbelAuth = function (corbelDriver) {
     return;
   }
 
-  let loggedUser = Meteor.users.findOne({username: userProfile.username});
+  let tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {}),
+      token = tokenObject.accessToken;
 
-  let userId = (!loggedUser || !loggedUser._id) ? Accounts.insertUserDoc({}, {username: userProfile.username}) : loggedUser._id;
-
-  Meteor.users.update({
-    _id: userId
+  UsersProfile.upsert({
+    _id: userProfile.username
   },
-  { $set: userProfile },
-  {
-    field: {
-      services: 0
-    }
-  }
-  );
+  userProfile);
 
-  var tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {});
+  //
+  Meteor.users.upsert({
+    _id: token
+  },
+  {
+    username: userProfile.username
+  });
 
   return {
-    userId: userId,
+    userId: token,
     stampedLoginToken: {
       token: tokenObject.accessToken,
       tokenExpires: tokenObject.expiresAt,
@@ -102,7 +124,9 @@ let corbelUser = function (corbelDriver, callback) {
 let getCorbelDriver = function (options) {
   options = options || {};
 
-  let corbelDriver = corbel.getDriver(_.extend(CORBEL_CONFIG, options));
+  options = _.extend(CORBEL_CONFIG, options);
+
+  let corbelDriver = corbel.getDriver(options);
 
   return corbelDriver;
 };
@@ -135,15 +159,13 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
     return undefined; // don't handle
   }
 
-  let corbelDriver = corbel.getDriver({
-    urlBase: 'https://composr-dev.bqws.io/{{module}}/v1.0/',
-    domain: 'booqs:nubico:chile',
+  let corbelDriver = corbel.getDriver(_.extend(CORBEL_ME_CONFIG, {
     iamToken: {
       accessToken: options.token,
       refreshToken: options.refreshToken,
       expiresAt: options.expiresAt
     }
-  });
+  }));
 
   let userProfile;
 
