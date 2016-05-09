@@ -1,6 +1,22 @@
 let corbel = require('corbel-js');
 
-UsersProfile = new Meteor.Collection('usersProfile');
+Meteor.usersProfile = usersProfile = new Meteor.Collection('usersProfile');
+
+let removeAllFromCollection = function (collection) {
+  if (!collection) {
+      return;
+  }
+
+  let data = collection.find().fetch();
+
+  _.forEach(data, function (item) {
+    collection.remove({_id: item._id});
+  });
+
+};
+
+removeAllFromCollection(Meteor.usersProfile);
+removeAllFromCollection(Meteor.users);
 
 Accounts.getCorbelDriver = function (userId) {
   let user = Meteor.users.findOne({
@@ -86,7 +102,7 @@ var getCorbelAuth = function (corbelDriver) {
   let tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {}),
       token = tokenObject.accessToken;
 
-  UsersProfile.upsert({
+  usersProfile.upsert({
     _id: userProfile.username
   },
   userProfile);

@@ -74,7 +74,7 @@ Accounts.destroyUserProfile = function (userName) {
   var user = this.users.findOne({ username: userName });
 
   if (!user) {
-    UsersProfile.remove({username: userName});
+    usersProfile.remove({username: userName});
   }
 };
 

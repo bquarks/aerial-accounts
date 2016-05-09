@@ -26,6 +26,7 @@ Package.onUse(function (api) {
   api.imply('accounts-base', ['client', 'server']);
   api.imply('meteor', 'server');
   api.export('Accounts', 'server');
+  api.export('UserProfile', 'server');
 
   api.addFiles('aerial_accounts_corbel.js', 'server');
   api.addFiles('aerial_accounts_server.js', 'server');
