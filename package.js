@@ -24,10 +24,12 @@ Package.onUse(function (api) {
   api.use('underscore');
 
   api.imply('accounts-base', ['client', 'server']);
+  api.imply('meteor', 'server');
   api.export('Accounts', 'server');
 
   api.addFiles('aerial_accounts_corbel.js', 'server');
   api.addFiles('aerial_accounts_server.js', 'server');
+  api.addFiles('aerial_accounts_publications.js', 'server');
   api.addFiles('aerial_accounts_client.js', 'client');
   api.addFiles('aerial_accounts_corbel_client.js', 'client');
   api.addFiles('aerial_accounts_token_client.js', 'client');
