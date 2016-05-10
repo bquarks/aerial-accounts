@@ -16,13 +16,14 @@ Accounts.getStorage = function () {
   return remember === 'true' ? Meteor._localStorage : sessionStorage;
 };
 
-Accounts.getStoredTokens = function () {
+Accounts.getAuthData = function () {
   let storage = this.getStorage();
 
   return {
     token: storage.getItem(Accounts.LOGIN_TOKEN_KEY),
     expiresAt: storage.getItem(Accounts.LOGIN_TOKEN_EXPIRES_KEY),
-    refreshToken: storage.getItem(Accounts.LOGIN_REFRESH_TOKEN_KEY)
+    refreshToken: storage.getItem(Accounts.LOGIN_REFRESH_TOKEN_KEY),
+    userId: storage.getItem(Accounts.USER_ID_KEY)
   };
 };
 

@@ -18,6 +18,18 @@ let removeAllFromCollection = function (collection) {
 removeAllFromCollection(Meteor.usersProfile);
 removeAllFromCollection(Meteor.users);
 
+Accounts.refreshUserToken = function (userId, newTokenObject) {
+  Meteor.users.update(
+  {
+    _id: userId
+  },
+  {
+    token: newTokenObject.accessToken,
+    refreshToken: newTokenObject.refreshToken,
+    tokenExpires: newTokenObject.expiresAt
+  });
+};
+
 Accounts.getCorbelDriver = function (userId) {
   let user = Meteor.users.findOne({
               _id: userId
@@ -136,10 +148,8 @@ let corbelUser = function (corbelDriver, callback) {
   });
 };
 
-let getCorbelDriver = function (options) {
-  options = options || {};
-
-  options = _.extend(CORBEL_CONFIG, options);
+let getCorbelDriver = function (options={}, config=CORBEL_CONFIG) {
+  options = _.extend(config, options);
 
   let corbelDriver = corbel.getDriver(options);
 
@@ -174,15 +184,21 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
     return undefined; // don't handle
   }
 
-  let corbelDriver = corbel.getDriver(_.extend(CORBEL_ME_CONFIG, {
+  let corbelDriver = getCorbelDriver({
     iamToken: {
       accessToken: options.token,
       refreshToken: options.refreshToken,
       expiresAt: options.expiresAt
     }
-  }));
+  }, CORBEL_ME_CONFIG);
 
   let userProfile;
+
+  let onRefresh = function (data) {
+    Accounts.refreshUserToken(options.userId, data);
+  };
+
+  corbelDriver.on('token:refresh', onRefresh);
 
   try {
     userProfile = getCorbelAuth(corbelDriver);
@@ -190,6 +206,8 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
   catch (error) {
     throwCorbelError(error);
   }
+
+  corbelDriver.off('token:refresh', onRefresh);
 
   return userProfile;
 

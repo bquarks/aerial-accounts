@@ -14,15 +14,14 @@ var onLoginCallback = function (callback, error, result) {
 
 
 Accounts.loginWithTokenCorbel = function (callback) {
-  var tokens = Accounts.getStoredTokens();
-
-  console.dir(tokens);
+  var corbelData = Accounts.getAuthData();
 
   this.callLoginMethod({
     methodArguments: [{
-      token: tokens.token,
-      expiresAt: tokens.expiresAt,
-      refreshToken: tokens.refreshToken
+      token: corbelData.token,
+      expiresAt: corbelData.expiresAt,
+      refreshToken: corbelData.refreshToken,
+      userId: corbelData.userId
     }],
     userCallback: function () {
       onLoginCallback.apply(this, [callback].concat(Array.prototype.slice.call(arguments)));
