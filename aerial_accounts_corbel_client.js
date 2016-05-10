@@ -14,15 +14,15 @@ var onLoginCallback = function (callback, error, result) {
 
 
 Accounts.loginWithTokenCorbel = function (callback) {
-  var token = Meteor._localStorage.getItem(this.LOGIN_TOKEN_KEY),
-      expiresAt = Meteor._localStorage.getItem(this.LOGIN_TOKEN_EXPIRES_KEY),
-      refreshToken = Meteor._localStorage.getItem(this.LOGIN_REFRESH_TOKEN_KEY);
+  var tokens = Accounts.getStoredTokens();
+
+  console.dir(tokens);
 
   this.callLoginMethod({
     methodArguments: [{
-      token: token,
-      expiresAt: expiresAt,
-      refreshToken: refreshToken
+      token: tokens.token,
+      expiresAt: tokens.expiresAt,
+      refreshToken: tokens.refreshToken
     }],
     userCallback: function () {
       onLoginCallback.apply(this, [callback].concat(Array.prototype.slice.call(arguments)));

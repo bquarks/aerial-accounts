@@ -7,21 +7,40 @@ Accounts.AUTO_LOGIN_KEY = 'remember';
 Meteor.startup(function () {
   var autologin = Meteor._localStorage.getItem(Accounts.AUTO_LOGIN_KEY) === 'true';
 
-  if (!autologin && Accounts._autoLoginEnabled) {
-    Accounts._disableAutoLogin();
-    Accounts._unstoreLoginToken();
-  }
-  else {
-    Accounts._autoLoginEnabled = true;
-    Accounts._pollStoredLoginTokenCorbel();
-  }
+  Accounts._pollStoredLoginTokenCorbel();
 });
 
+Accounts.getStorage = function () {
+  let remember = Meteor._localStorage.getItem(Accounts.AUTO_LOGIN_KEY);
+
+  return remember === 'true' ? Meteor._localStorage : sessionStorage;
+};
+
+Accounts.getStoredTokens = function () {
+  let storage = this.getStorage();
+
+  return {
+    token: storage.getItem(Accounts.LOGIN_TOKEN_KEY),
+    expiresAt: storage.getItem(Accounts.LOGIN_TOKEN_EXPIRES_KEY),
+    refreshToken: storage.getItem(Accounts.LOGIN_REFRESH_TOKEN_KEY)
+  };
+};
+
+
+
+Accounts._storedLoginToken = function () {
+  let storage = this.getStorage();
+
+  return storage.getItem(this.LOGIN_TOKEN_KEY);
+};
+
 Accounts._unstoreLoginToken = function () {
-  Meteor._localStorage.removeItem(this.USER_ID_KEY);
-  Meteor._localStorage.removeItem(this.LOGIN_TOKEN_KEY);
-  Meteor._localStorage.removeItem(this.LOGIN_TOKEN_EXPIRES_KEY);
-  Meteor._localStorage.removeItem(this.LOGIN_REFRESH_TOKEN_KEY);
+  let storage = this.getStorage();
+
+  storage.removeItem(this.USER_ID_KEY);
+  storage.removeItem(this.LOGIN_TOKEN_KEY);
+  storage.removeItem(this.LOGIN_TOKEN_EXPIRES_KEY);
+  storage.removeItem(this.LOGIN_REFRESH_TOKEN_KEY);
 
   // to ensure that the localstorage poller doesn't end up trying to
   // connect a second time
@@ -33,10 +52,12 @@ Accounts._disableAutoLogin = function () {
 };
 
 Accounts._storeLoginToken = function (userId, token, tokenExpires, refreshToken) {
-  Meteor._localStorage.setItem(this.USER_ID_KEY, userId);
-  Meteor._localStorage.setItem(this.LOGIN_TOKEN_KEY, token);
-  Meteor._localStorage.setItem(this.LOGIN_REFRESH_TOKEN_KEY, refreshToken);
-  Meteor._localStorage.setItem(this.LOGIN_TOKEN_EXPIRES_KEY, tokenExpires);
+  let storage = this.getStorage();
+
+  storage.setItem(this.USER_ID_KEY, userId);
+  storage.setItem(this.LOGIN_TOKEN_KEY, token);
+  storage.setItem(this.LOGIN_REFRESH_TOKEN_KEY, refreshToken);
+  storage.setItem(this.LOGIN_TOKEN_EXPIRES_KEY, tokenExpires);
 
   // to ensure that the localstorage poller doesn't end up trying to
   // connect a second time
@@ -44,29 +65,29 @@ Accounts._storeLoginToken = function (userId, token, tokenExpires, refreshToken)
 };
 
 Accounts._pollStoredLoginTokenCorbel = function () {
-  var self = this;
+  var currentLoginToken = this._storedLoginToken();
 
-  if (! self._autoLoginEnabled) {
+  if (!currentLoginToken) {
     return;
   }
 
-  var currentLoginToken = self._storedLoginToken();
-
   // != instead of !== just to make sure undefined and null are treated the same
-  if (self._lastLoginTokenWhenPolled != currentLoginToken) {
+  if (this._lastLoginTokenWhenPolled !== currentLoginToken) {
 
     this.connection.onReconnect = null;
 
     if (currentLoginToken) {
-      self.loginWithTokenCorbel(function (err) {
+      var self = this;
+
+      this.loginWithTokenCorbel(function (err) {
         if (err) {
           self.makeClientLoggedOut();
         }
       });
     } else {
-      self.logout();
+      this.logout();
     }
   }
 
-  self._lastLoginTokenWhenPolled = currentLoginToken;
+  this._lastLoginTokenWhenPolled = currentLoginToken;
 };
