@@ -119,12 +119,13 @@ var getCorbelAuth = function (corbelDriver) {
   },
   userProfile);
 
-  //
   Meteor.users.upsert({
     _id: token
   },
   {
-    username: userProfile.username
+    $set: {
+      userName: userProfile.username
+    }
   });
 
   return {

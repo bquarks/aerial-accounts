@@ -62,7 +62,7 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
       userName;
 
   if (userObject) {
-    userName = userObject.username;
+    userName = userObject.userName;
   }
 
   this.users.remove({ _id: userId });
@@ -71,10 +71,10 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
 };
 
 Accounts.destroyUserProfile = function (userName) {
-  var user = this.users.findOne({ username: userName });
+  var user = this.users.findOne({ userName: userName });
 
   if (!user) {
-    usersProfile.remove({username: userName});
+    usersProfile.remove({userName: userName});
   }
 };
 
