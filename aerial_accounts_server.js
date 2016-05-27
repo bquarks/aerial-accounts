@@ -1,3 +1,4 @@
+
 let _loginUser = Accounts._loginUser;
 
 
@@ -61,8 +62,8 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
   var userObject = this.users.findOne(query),
       userName;
 
-  if (userObject) {
-    userName = userObject.userName;
+  if (userObject && userObject.profile) {
+    userName = userObject.profile.username;
   }
 
   this.users.remove({ _id: userId });
@@ -71,10 +72,10 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
 };
 
 Accounts.destroyUserProfile = function (userName) {
-  var user = this.users.findOne({ userName: userName });
+  var user = this.users.findOne({ 'profile.username': userName });
 
   if (!user) {
-    usersProfile.remove({userName: userName});
+    usersProfile.remove({username: userName});
   }
 };
 

@@ -124,7 +124,7 @@ var getCorbelAuth = function (corbelDriver) {
   },
   {
     $set: {
-      userName: userProfile.username
+      'profile.username': userProfile.username
     }
   });
 
