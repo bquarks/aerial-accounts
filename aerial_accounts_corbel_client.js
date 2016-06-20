@@ -21,7 +21,7 @@ Accounts.loginWithTokenCorbel = function (callback) {
       token: corbelData.token,
       expiresAt: corbelData.expiresAt,
       refreshToken: corbelData.refreshToken,
-      userId: corbelData.userId
+      _userId: corbelData.userId
     }],
     userCallback: function () {
       onLoginCallback.apply(this, [callback].concat(Array.prototype.slice.call(arguments)));
