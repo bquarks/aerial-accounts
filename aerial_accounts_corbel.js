@@ -21,22 +21,26 @@ removeAllFromCollection(Meteor.users);
 Accounts.resetUserToken = function (userId, newTokenObject) {
   let user = Meteor.users.findOne({ _id: userId }); // get the old user data
 
-  // We need to update the old user data with the refreshed token object data
-  user._id = newTokenObject.accessToken;
-  user.token = newTokenObject.accessToken;
-  user.refreshToken = newTokenObject.refreshToken;
-  user.tokenExpires = newTokenObject.expiresAt;
+  if (user) {
 
-  // Create a new user data with the refreshed token object and with the old user data information (profile..)
-	Meteor.users.upsert({
-    _id: user._id
-  },
-  user);
+    // We need to update the old user data with the refreshed token object data
+    user._id = newTokenObject.accessToken;
+    user.token = newTokenObject.accessToken;
+    user.refreshToken = newTokenObject.refreshToken;
+    user.tokenExpires = newTokenObject.expiresAt;
 
-  // Remove the old user data
-  Meteor.users.remove({
-    _id: userId
-  });
+    // Create a new user data with the refreshed token object and with the old user data information (profile..)
+    Meteor.users.upsert({
+      _id: user._id
+    },
+    user);
+
+    // Remove the old user data
+    Meteor.users.remove({
+      _id: userId
+    });
+  }
+
 
 };
 
