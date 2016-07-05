@@ -13,7 +13,7 @@ Package.describe({
 });
 
 Npm.depends({
-  'corbel-js': '0.4.0'
+  'corbel-js': '0.6.3'
 });
 
 Package.onUse(function (api) {
