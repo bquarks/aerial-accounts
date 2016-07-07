@@ -63,7 +63,7 @@ Accounts.getCorbelDriver = function (userId) {
       corbelDriver;
 
   if (user) {
-    corbelDriver = corbel.getDriver(_.extend(CORBEL_ME_CONFIG, {
+    corbelDriver = corbel.getDriver(_.extend({}, CORBEL_RESOURCE_CONFIG, {
       iamToken: {
         accessToken: user.token,
         refreshToken: user.refreshToken,
@@ -179,7 +179,7 @@ let corbelUser = function (corbelDriver, callback) {
 };
 
 let getCorbelDriver = function (options={}, config=CORBEL_CONFIG) {
-  options = _.extend(config, options);
+  options = _.extend({}, config, options);
 
   let corbelDriver = corbel.getDriver(options);
 
