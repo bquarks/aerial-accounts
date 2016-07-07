@@ -45,7 +45,7 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
 };
 
 Accounts.refreshUserToken = function (userId, newTokenObject) {
-	Meteor.users.update(
+	Meteor.users.upsert(
   {
     _id: userId
   },
@@ -104,7 +104,6 @@ let throwCorbelError = function (error) {
 };
 
 let corbelLogin = function (corbelDriver, username, password, callback) {
-
   let claims = {
     'scope': CORBEL_SCOPES_CONFIG,
     'basic_auth.username': username,
@@ -136,7 +135,6 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
   if (!userProfile) {
     return;
   }
-
   let tokenObject = corbelDriver.config.get(corbel.Iam.IAM_TOKEN, {}),
       token = tokenObject.accessToken;
 
@@ -254,7 +252,6 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
   corbelDriver.off('token:refresh', onRefresh);
 
   return userProfile;
-
 });
 
 
