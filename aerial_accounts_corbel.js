@@ -4,13 +4,13 @@ Meteor.usersProfile = usersProfile = new Meteor.Collection('usersProfile');
 
 let removeAllFromCollection = function (collection) {
   if (!collection) {
-      return;
+    return;
   }
 
   let data = collection.find().fetch();
 
   _.forEach(data, function (item) {
-    collection.remove({_id: item._id});
+    collection.remove({ _id: item._id });
   });
 
 };
@@ -45,11 +45,11 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
 };
 
 Accounts.refreshUserToken = function (userId, newTokenObject) {
-	Meteor.users.upsert(
-  {
+  Meteor.users.upsert(
+   {
     _id: userId
   },
-  {
+   {
     token: newTokenObject.accessToken,
     refreshToken: newTokenObject.refreshToken,
     tokenExpires: newTokenObject.expiresAt
@@ -105,7 +105,7 @@ let throwCorbelError = function (error) {
 
 let corbelLogin = function (corbelDriver, username, password, callback) {
   let claims = {
-    'scope': CORBEL_SCOPES_CONFIG,
+    scope: CORBEL_SCOPES_CONFIG,
     'basic_auth.username': username,
     'basic_auth.password': password
   };
@@ -128,7 +128,7 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
   try {
     userProfile = corbelUser(corbelDriver);
   }
-  catch(e) {
+  catch (e) {
     throwCorbelError(e);
   }
 
@@ -143,13 +143,15 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
     _id: userProfile.username
   },
   userProfile);
-
+  console.log(userProfile);
   Meteor.users.upsert({
     _id: token
   },
   {
     $set: {
-      'profile.username': userProfile.username
+      'profile.username': userProfile.username,
+      'profile.roles': userProfile.properties.role ? [userProfile.properties.role] : [],
+      'profile.domain': userProfile.domain
     }
   });
 
@@ -213,19 +215,19 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
     return undefined; // don't handle
   }
 
-	let token = options.token,
-			refreshToken = options.refreshToken,
-			expiresAt = options.expiresAt,
-      tokenRefreshed = false;
+  let token = options.token,
+    refreshToken = options.refreshToken,
+    expiresAt = options.expiresAt,
+       tokenRefreshed = false;
 
-	var user = Meteor.users.findOne({ _id: options._userId }); // Find the user to check if the token provided by the method is still 'valid'
+  var user = Meteor.users.findOne({ _id: options._userId }); // Find the user to check if the token provided by the method is still 'valid'
 
-	if (user && user.token !== options.token) { // The token has been refreshed
-		token = user.token;
-		refreshToken = user.refreshToken;
-		expiresAt = user.tokenExpires;
+  if (user && user.token !== options.token) { // The token has been refreshed
+    token = user.token;
+    refreshToken = user.refreshToken;
+    expiresAt = user.tokenExpires;
     tokenRefreshed = true;
-	}
+  }
 
   let corbelDriver = getCorbelDriver({
     iamToken: {
