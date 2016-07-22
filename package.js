@@ -2,7 +2,7 @@
 
 Package.describe({
   name: 'bquarks:aerial-accounts',
-  version: '0.5.8',
+  version: '0.5.9',
   // Brief, one-line summary of the package.
   summary: 'Meteor package to wrapp the meteor accounts system with the aerial suite',
   // URL to the Git repository containing the source code for this package.

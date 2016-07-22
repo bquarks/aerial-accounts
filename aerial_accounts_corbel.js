@@ -143,7 +143,7 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
     _id: userProfile.username
   },
   userProfile);
-  console.log(userProfile);
+
   Meteor.users.upsert({
     _id: token
   },
