@@ -22,7 +22,6 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
   let user = Meteor.users.findOne({ _id: userId }); // get the old user data
 
   if (user) {
-
     // We need to update the old user data with the refreshed token object data
     user._id = newTokenObject.accessToken;
     user.token = newTokenObject.accessToken;
@@ -49,11 +48,11 @@ Accounts.refreshUserToken = function (userId, newTokenObject) {
    {
     _id: userId
   },
-   {
+   { $set: {
     token: newTokenObject.accessToken,
     refreshToken: newTokenObject.refreshToken,
     tokenExpires: newTokenObject.expiresAt
-  });
+  } });
 };
 
 Accounts.getCorbelDriver = function (userId) {
