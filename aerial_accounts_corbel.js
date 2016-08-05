@@ -209,6 +209,18 @@ Accounts.registerLoginHandler('corbel', function (options) {
 
 });
 
+Accounts.sendNotification = function (data, userId, domain, cb) {
+  let corbelDriver = this.getCorbelDriver(userId);
+
+  corbelDriver.domain(domain).notifications.notification().send(data)
+    .then(function (res) {
+      cb(null, res.status);
+    })
+    .catch(function (err) {
+      cb(err);
+    });
+};
+
 Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
   if (!options.token && !options.refreshToken && !options.expiresAt && !options._userId ) {
     return undefined; // don't handle
