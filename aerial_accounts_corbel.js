@@ -15,9 +15,6 @@ let removeAllFromCollection = function (collection) {
 
 };
 
-removeAllFromCollection(Meteor.usersProfile);
-removeAllFromCollection(Meteor.users);
-
 Accounts.resetUserToken = function (userId, newTokenObject) {
   let user = Meteor.users.findOne({ _id: userId }); // get the old user data
 
@@ -32,7 +29,9 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
     Meteor.users.update({
       _id: user._id
     },
-    user,
+    {
+      $set: user
+    },
     {
       upsert: true
     });
@@ -153,7 +152,9 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
   usersProfile.update({
     _id: userProfile.username
   },
-  userProfile,
+  {
+    $set: userProfile
+  },
   {
     upsert: true
   });
