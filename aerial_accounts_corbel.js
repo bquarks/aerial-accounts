@@ -29,10 +29,13 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
     user.tokenExpires = newTokenObject.expiresAt;
 
     // Create a new user data with the refreshed token object and with the old user data information (profile..)
-    Meteor.users.upsert({
+    Meteor.users.update({
       _id: user._id
     },
-    user);
+    user,
+    {
+      upsert: true
+    });
 
     // Remove the old user data
     Meteor.users.remove({
@@ -44,7 +47,9 @@ Accounts.resetUserToken = function (userId, newTokenObject) {
 };
 
 Accounts.refreshUserToken = function (userId, newTokenObject) {
-  Meteor.users.upsert(
+  console.log('refresh token...');
+
+  Meteor.users.update(
    {
     _id: userId
   },
@@ -52,7 +57,11 @@ Accounts.refreshUserToken = function (userId, newTokenObject) {
     token: newTokenObject.accessToken,
     refreshToken: newTokenObject.refreshToken,
     tokenExpires: newTokenObject.expiresAt
-  } });
+  }},
+  {
+    upsert: true
+  }
+ );
 };
 
 Accounts.getCorbelDriver = function (userId) {
@@ -103,10 +112,13 @@ let throwCorbelError = function (error) {
 };
 
 let corbelLogin = function (corbelDriver, username, password, callback) {
+  // let expiresAt = moment.unix(moment().unix()).add('1', 'm').unix();
+
   let claims = {
     scope: CORBEL_SCOPES_CONFIG,
     'basic_auth.username': username,
     'basic_auth.password': password
+    // exp: (expiresAt)
   };
 
   corbelDriver.iam.token().create({
@@ -138,12 +150,15 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
       token = tokenObject.accessToken;
 
   // TODO: Check if this is necessary when tokenRefreshed
-  usersProfile.upsert({
+  usersProfile.update({
     _id: userProfile.username
   },
-  userProfile);
+  userProfile,
+  {
+    upsert: true
+  });
 
-  Meteor.users.upsert({
+  Meteor.users.update({
     _id: token
   },
   {
@@ -152,7 +167,11 @@ var getCorbelAuth = function (corbelDriver, tokenRefreshed, _userId) {
       'profile.roles': userProfile.properties.role ? [userProfile.properties.role] : [],
       'profile.domain': userProfile.domain
     }
-  });
+  },
+  {
+    upsert: true
+  }
+  );
 
   if (tokenRefreshed) { // If the token has been refreshed, we need to remove the user with the old token userId
     Meteor.users.remove({ _id: _userId });
@@ -234,6 +253,7 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
   var user = Meteor.users.findOne({ _id: options._userId }); // Find the user to check if the token provided by the method is still 'valid'
 
   if (user && user.token !== options.token) { // The token has been refreshed
+    console.log('token refreshed');
     token = user.token;
     refreshToken = user.refreshToken;
     expiresAt = user.tokenExpires;
@@ -250,6 +270,7 @@ Accounts.replaceLoginHandler('resume', 'resumeCorbel', function (options) {
   let userProfile;
 
   let onRefresh = function (data) {
+    console.log('refresh');
     Accounts.resetUserToken(options._userId, data);
   };
 

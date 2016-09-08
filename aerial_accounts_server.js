@@ -58,6 +58,7 @@ Accounts.destroyToken = function (userId, loginToken, connectionId) {
   var query = {
     _id: userId
   };
+  console.log('destroing token');
 
   var userObject = this.users.findOne(query),
       userName;
@@ -89,7 +90,7 @@ Accounts.destroyUserProfile = function (userName) {
 Accounts._insertHashedLoginToken = function (userId, corbelToken, query, connection) {
   query = query ? _.clone(query) : {};
   query._id = userId;
-  this.users.upsert({
+  this.users.update({
     _id: userId
   },
   {
@@ -99,7 +100,11 @@ Accounts._insertHashedLoginToken = function (userId, corbelToken, query, connect
       tokenExpires: corbelToken.tokenExpires,
       connection: connection.id
     }
-  });
+  },
+  {
+    upsert: true
+  }
+  );
 };
 
 //
@@ -144,6 +149,8 @@ Accounts._setLoginToken = function (userId, connection, newToken) {
 // the observe that we started when we associated the connection with
 // this token.
 Accounts._removeTokenFromConnection = function (connectionId) {
+
+  console.log('remove token from connection');
 
   var result = this._getLoginToken(connectionId);
 
